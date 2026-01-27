@@ -1,0 +1,132 @@
+import { format, isToday, isTomorrow, isYesterday, isPast, differenceInDays, isThisYear, parseISO, isValid } from 'date-fns';
+
+export default class Todo {
+  constructor(title, description, dueDateString, priority = 'medium') {
+    this.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    this.title = title;
+    this.description = description;
+    this.dueDate = this._parseDate(dueDateString);
+    this.priority = priority; // 'low', 'medium', 'high'
+    this.completed = false;
+    this.notes = '';
+    this.checklist = [];
+    this.createdAt = new Date();
+    this.updatedAt = new Date();
+  }
+
+  // Helper to parse any date format
+  _parseDate(dateString) {
+    if (!dateString) return null;
+    
+    // If it's already a Date object
+    if (dateString instanceof Date) {
+      return isValid(dateString) ? dateString : null;
+    }
+    
+    // Try parsing as ISO string first
+    let dateObj = parseISO(dateString);
+    if (isValid(dateObj)) {
+      return dateObj;
+    }
+    
+    // Try as regular Date
+    dateObj = new Date(dateString);
+    if (isValid(dateObj)) {
+      return dateObj;
+    }
+    
+    // Last attempt: try common date formats
+    const formats = [
+      'yyyy-MM-dd',
+      'MM/dd/yyyy',
+      'dd/MM/yyyy',
+      'yyyy/MM/dd'
+    ];
+    
+    for (const formatStr of formats) {
+      try {
+        // parseISO might not handle all formats, try Date constructor again
+        dateObj = new Date(dateString);
+        if (isValid(dateObj)) {
+          return dateObj;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    return null;
+  }
+
+  _getDateObject() {
+    if (!this.dueDate) return null;
+    
+    if (this.dueDate instanceof Date && isValid(this.dueDate)) {
+      return this.dueDate;
+    }
+    
+    // If somehow we still have a string, parse it
+    if (typeof this.dueDate === 'string') {
+      return this._parseDate(this.dueDate);
+    }
+    
+    return null;
+  }
+
+  getFormattedDate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return 'No due date';
+
+    if (isToday(dateObj)) {
+      return 'Today';
+    } else if (isTomorrow(dateObj)) {
+      return 'Tomorrow';
+    } else if (isYesterday(dateObj)) {
+      return 'Yesterday';
+    } else if (isPast(dateObj)) {
+      const daysAgo = differenceInDays(new Date(), dateObj);
+      return `${daysAgo} days ago`;
+    } else {
+      const daysUntil = differenceInDays(dateObj, new Date());
+      return `In ${daysUntil} days`;
+    }
+  }
+
+  getShortDate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return '';
+    
+    if (isThisYear(dateObj)) {
+      return format(dateObj, 'MMM d');
+    } else {
+      return format(dateObj, 'MMM d, yyyy');
+    }
+  }
+
+  getFullDate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return '';
+    
+    return format(dateObj, 'EEEE, MMMM d, yyyy');
+  }
+
+  getISODate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return '';
+    
+    return dateObj.toISOString().split('T')[0];
+  }
+
+  toggleCompletion() {
+    this.completed = !this.completed;
+    this.updatedAt = new Date();
+  }
+
+  update({ title, description, dueDate, priority }) {
+    this.title = title || this.title;
+    this.description = description || this.description;
+    this.dueDate = dueDate ? this._parseDate(dueDate) : this.dueDate;
+    this.priority = priority || this.priority;
+    this.updatedAt = new Date();
+  }
+}

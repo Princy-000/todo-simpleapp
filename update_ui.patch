@@ -1,0 +1,22 @@
+--- a/src/modules/UI.js
++++ b/src/modules/UI.js
+@@ -218,6 +218,9 @@ export class UI {
+     }
+     container.innerHTML = '';
+-    if (project.todos.length === 0) {
++
++    const todosToRender = todos || project.todos;
++
++    if (todosToRender.length === 0) {
+       container.innerHTML = '<p class="empty-message">No todos yet. Add one!</p>';
+       console.log('📭 No todos to display');
+@@ -225,11 +228,11 @@ export class UI {
+     }
+-    project.todos.forEach(todo => {
++    todosToRender.forEach(todo => {
+       const todoElement = this.createTodoElement(todo);
+       container.appendChild(todoElement);
+     });
+-    console.log(`✅ Rendered ${project.todos.length} todos`);
++    console.log(`✅ Rendered ${todosToRender.length} todos`);
+   }

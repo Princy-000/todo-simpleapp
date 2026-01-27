@@ -1,0 +1,423 @@
+export class UI {
+  constructor(todoManager) {
+    this.todoManager = todoManager;
+    this.currentProjectId = null;
+    this.editingTodoId = null; // Track which todo we're editing
+  }
+  
+  init() {
+    console.log('✅ UI module initialized');
+    this.renderProjects();
+    this.renderTodos();
+    this.setupEventListeners();
+  }
+  
+  // Setup all event listeners
+  setupEventListeners() {
+    // New Project button
+    const newProjectBtn = document.getElementById('new-project-btn');
+    if (newProjectBtn) {
+      newProjectBtn.addEventListener('click', () => this.handleNewProject());
+      console.log('✅ New Project button listener added');
+    } else {
+      console.log('⚠️ New Project button not found');
+    }
+    
+    // New Todo button - show modal
+    const newTodoBtn = document.getElementById('new-todo-btn');
+    if (newTodoBtn) {
+      newTodoBtn.addEventListener('click', () => this.showTodoModal());
+      console.log('✅ New Todo button listener added');
+    }
+    
+    // Modal listeners will be setup when modal is shown
+  }
+  
+  // Show todo modal for NEW todo
+  showTodoModal() {
+    this.editingTodoId = null; // Not editing
+    this.showModalWithData({
+      title: '',
+      description: '',
+      dueDate: new Date().toISOString().split('T')[0],
+      priority: 'medium'
+    }, 'Add New Todo');
+  }
+  
+  // Show todo modal for EDITING todo
+  showEditTodoModal(todo) {
+    this.editingTodoId = todo.id;
+    this.showModalWithData({
+      title: todo.title,
+      description: todo.description || '',
+      dueDate: todo.getISODate() || new Date().toISOString().split('T')[0],
+      priority: todo.priority
+    }, 'Edit Todo');
+  }
+  
+  // Show modal with pre-filled data
+  showModalWithData(data, title) {
+    const modal = document.getElementById('todo-modal');
+    if (!modal) {
+      console.log('⚠️ Todo modal not found');
+      return;
+    }
+    
+    // Update modal title
+    const modalTitle = modal.querySelector('h2');
+    if (modalTitle) {
+      modalTitle.textContent = title;
+    }
+    
+    // Pre-fill form
+    document.getElementById('todo-title').value = data.title;
+    document.getElementById('todo-description').value = data.description;
+    document.getElementById('todo-due-date').value = data.dueDate;
+    document.getElementById('todo-priority').value = data.priority;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Set up modal event listeners
+    this.setupModalListeners();
+    
+    // Focus on title input
+    document.getElementById('todo-title').focus();
+    
+    console.log(`✅ Todo modal shown for: ${title}`);
+  }
+  
+  // Setup modal listeners
+  setupModalListeners() {
+    const modal = document.getElementById('todo-modal');
+    const form = document.getElementById('todo-form');
+    const closeBtn = modal.querySelector('.close-modal');
+    const cancelBtn = modal.querySelector('.cancel-btn');
+    
+    // Remove existing listeners to avoid duplicates
+    if (closeBtn) closeBtn.onclick = null;
+    if (cancelBtn) cancelBtn.onclick = null;
+    if (modal) modal.onclick = null;
+    if (form) form.onsubmit = null;
+    
+    // Close modal on X button
+    if (closeBtn) {
+      closeBtn.onclick = () => this.hideTodoModal();
+    }
+    
+    // Close modal on cancel button
+    if (cancelBtn) {
+      cancelBtn.onclick = () => this.hideTodoModal();
+    }
+    
+    // Close modal on background click
+    if (modal) {
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          this.hideTodoModal();
+        }
+      };
+    }
+    
+    // Handle form submission
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        if (this.editingTodoId) {
+          this.handleEditTodo();
+        } else {
+          this.handleAddTodo();
+        }
+      };
+    }
+  }
+  
+  // Hide todo modal
+  hideTodoModal() {
+    const modal = document.getElementById('todo-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      this.editingTodoId = null;
+      
+      // Reset form
+      const form = document.getElementById('todo-form');
+      if (form) form.reset();
+      
+      console.log('✅ Todo modal hidden');
+    }
+  }
+  
+  // Handle adding a new todo
+  handleAddTodo() {
+    const todoData = this.getFormData();
+    if (!todoData) return;
+    
+    // Add todo via TodoManager
+    const newTodo = this.todoManager.addTodoToCurrent(todoData);
+    
+    if (newTodo) {
+      console.log(`✅ Created new todo: ${newTodo.title}`);
+      this.hideTodoModal();
+      this.renderTodos();
+    } else {
+      alert('Failed to create todo');
+    }
+  }
+  
+  // Handle editing an existing todo
+  handleEditTodo() {
+    if (!this.editingTodoId) return;
+    
+    const todoData = this.getFormData();
+    if (!todoData) return;
+    
+    // Update todo via TodoManager
+    if (this.todoManager.updateTodo(this.editingTodoId, todoData)) {
+      console.log(`✅ Updated todo: ${todoData.title}`);
+      this.hideTodoModal();
+      this.renderTodos();
+    } else {
+      alert('Failed to update todo');
+    }
+  }
+  
+  // Get form data with validation
+  getFormData() {
+    const titleInput = document.getElementById('todo-title');
+    const descriptionInput = document.getElementById('todo-description');
+    const dueDateInput = document.getElementById('todo-due-date');
+    const prioritySelect = document.getElementById('todo-priority');
+    
+    if (!titleInput || !titleInput.value.trim()) {
+      alert('Please enter a title for the todo');
+      titleInput.focus();
+      return null;
+    }
+    
+    return {
+      title: titleInput.value.trim(),
+      description: descriptionInput.value.trim(),
+      dueDate: dueDateInput.value || null,
+      priority: prioritySelect.value
+    };
+  }
+  
+  // Handle New Project button click
+  handleNewProject() {
+    const projectName = prompt('Enter project name:');
+    
+    if (!projectName || projectName.trim() === '') {
+      alert('Project name cannot be empty!');
+      return;
+    }
+    
+    const description = prompt('Enter project description (optional):') || '';
+    
+    // Create project via TodoManager
+    const newProject = this.todoManager.createProject(projectName.trim(), description);
+    
+    if (newProject) {
+      console.log(`✅ Created new project: ${newProject.name}`);
+      
+      // Refresh sidebar to show new project
+      this.renderProjects();
+      
+      // Switch to new project
+      this.selectProject(newProject.id);
+      
+      // Show success message
+      alert(`Project "${newProject.name}" created successfully!`);
+    } else {
+      alert('Failed to create project');
+    }
+  }
+  
+  // Handle Edit Project button click
+  handleEditProject(projectId) {
+    const project = this.todoManager.getProject(projectId);
+    if (!project) return;
+    
+    const newName = prompt('Edit project name:', project.name);
+    if (newName === null) return; // User cancelled
+    
+    const newDescription = prompt('Edit project description:', project.description || '');
+    
+    if (newName && newName.trim() !== '') {
+      const updates = {
+        name: newName.trim(),
+        description: newDescription || ''
+      };
+      
+      if (this.todoManager.updateProject(projectId, updates)) {
+        console.log(`✅ Updated project: ${newName}`);
+        
+        // Refresh UI
+        this.renderProjects();
+        this.renderTodos();
+        
+        alert(`Project "${newName}" updated successfully!`);
+      } else {
+        alert('Failed to update project');
+      }
+    } else {
+      alert('Project name cannot be empty!');
+    }
+  }
+  
+  // Render projects in sidebar
+  renderProjects() {
+    const projects = this.todoManager.projects;
+    const sidebar = document.getElementById('sidebar');
+    
+    if (!sidebar) {
+      console.log('⏳ Sidebar not found yet, DOM might not be ready');
+      return;
+    }
+    
+    // Clear existing
+    const projectsList = document.getElementById('projects-list');
+    if (projectsList) {
+      projectsList.innerHTML = '';
+      
+      // Add each project
+      projects.forEach(project => {
+        const li = document.createElement('li');
+        const isActive = project.id === this.currentProjectId;
+        li.innerHTML = `
+          <button class="project-btn${isActive ? ' active' : ''}" data-project-id="${project.id}">
+            📁 ${project.name}
+            <span class="project-count">(${project.getTodoCount().pending}/${project.getTodoCount().total})</span>
+          </button>
+        `;
+        
+        // Add click handler
+        li.querySelector('.project-btn').addEventListener('click', () => {
+          this.selectProject(project.id);
+        });
+        
+        projectsList.appendChild(li);
+      });
+      
+      console.log(`✅ Rendered ${projects.length} projects`);
+    }
+  }
+  
+  // Render todos in main area
+  renderTodos() {
+    const project = this.todoManager.getCurrentProject();
+    const container = document.getElementById('todos-container');
+    
+    if (!project || !container) {
+      console.log('⏳ No project or container found');
+      return;
+    }
+    
+    // Update project header with name AND description
+    const header = document.getElementById('current-project');
+    if (header) {
+      header.innerHTML = `
+        <div class="project-header">
+          <h2>${project.name}</h2>
+          ${project.description ? `<p class="project-description">${project.description}</p>` : ''}
+          <button class="edit-project-btn" title="Edit project">
+            <i class="fas fa-edit"></i> Edit
+          </button>
+        </div>
+      `;
+      
+      // Add edit button listener
+      const editBtn = header.querySelector('.edit-project-btn');
+      if (editBtn) {
+        editBtn.addEventListener('click', () => this.handleEditProject(project.id));
+      }
+    }
+    
+    // Clear and render todos
+    container.innerHTML = '';
+    
+    if (project.todos.length === 0) {
+      container.innerHTML = '<p class="empty-message">No todos yet. Add one!</p>';
+      console.log('📭 No todos to display');
+      return;
+    }
+    
+    project.todos.forEach(todo => {
+      const todoElement = this.createTodoElement(todo);
+      container.appendChild(todoElement);
+    });
+    
+    console.log(`✅ Rendered ${project.todos.length} todos`);
+  }
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        this.showEditTodoModal(todo);
+      });
+    }
+    
+    return div;
+  }
+    div.className = `todo-item ${todo.getPriorityClass()}`;
+    div.setAttribute('data-todo-id', todo.id);
+    
+    div.innerHTML = `
+      <div class="todo-header">
+        <input type="checkbox" class="complete-checkbox" ${todo.completed ? 'checked' : ''}>
+        <h3 class="todo-title">${todo.title}</h3>
+        <div class="todo-actions">
+          <button class="edit-todo-btn" title="Edit todo">✏️</button>
+          <button class="delete-btn" title="Delete todo">🗑️</button>
+        </div>
+      </div>
+      <div class="todo-details">
+        <span class="due-date" title="${todo.getFullDate()}">📅 ${todo.getFormattedDate()}</span>
+        <span class="priority-badge">${todo.priority}</span>
+      </div>
+      ${todo.description ? `<p class="todo-description">${todo.description}</p>` : ''}
+    `;
+    
+    // Add event listeners
+    const checkbox = div.querySelector('.complete-checkbox');
+    checkbox.addEventListener('change', () => {
+      this.toggleTodoComplete(todo.id);
+    });
+    
+    const deleteBtn = div.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', () => {
+      this.deleteTodo(todo.id);
+    });
+    
+    const editBtn = div.querySelector('.edit-todo-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        this.showEditTodoModal(todo);
+      });
+    }
+    
+    return div;
+  }
+  
+  // Select a project
+  selectProject(projectId) {
+    this.todoManager.setCurrentProject(projectId);
+    this.currentProjectId = projectId;
+    this.renderProjects();  // Refresh sidebar to show active project
+    this.renderTodos();
+    console.log(`✅ Selected project: ${this.todoManager.getCurrentProject()?.name}`);
+  }
+  
+  // Toggle todo completion
+  toggleTodoComplete(todoId) {
+    this.todoManager.toggleTodoComplete(todoId);
+    this.renderTodos();
+    console.log('✅ Toggled todo completion');
+  }
+  
+  // Delete a todo
+  deleteTodo(todoId) {
+    if (confirm('Delete this todo?')) {
+      this.todoManager.deleteTodo(todoId);
+      this.renderTodos();
+      console.log('✅ Deleted todo');
+    }
+  }
+}

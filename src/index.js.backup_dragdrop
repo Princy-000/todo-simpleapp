@@ -1,0 +1,28 @@
+import './styles/main.css';  // ADD THIS LINE
+import { TodoManager } from './modules/TodoManager.js';
+import { UI } from './modules/UI.js';
+
+console.log('🚀 Todo SimpleApp - UI Integration Test');
+console.log('=======================================');
+
+// Initialize the todo manager
+const todoManager = new TodoManager();
+
+// Initialize UI with the manager
+const ui = new UI(todoManager);
+ui.init();
+
+// Display initial state
+console.log('📊 App State:');
+console.log('- Projects:', todoManager.projects.length);
+console.log('- Current Project:', todoManager.getCurrentProject()?.name);
+console.log('- Todos in current project:', todoManager.getCurrentProject()?.getTodoCount().total);
+
+// Make available globally for testing
+window.todoManager = todoManager;
+window.ui = ui;
+
+console.log('\n🎯 UI Module Test Complete!');
+console.log('- Type "ui" in console to explore UI instance');
+console.log('- Type "todoManager" to explore business logic');
+console.log('\n🔜 Next: We\'ll add actual UI rendering methods!');

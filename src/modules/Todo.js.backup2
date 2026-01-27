@@ -1,0 +1,84 @@
+import { format, isToday, isTomorrow, isYesterday, isPast, differenceInDays, isThisYear } from 'date-fns';
+
+export default class Todo {
+  constructor({ title, description, dueDate, priority, project, completed = false }) {
+    this.title = title;
+    this.description = description;
+    this.dueDate = dueDate ? new Date(dueDate) : null;
+    this.priority = priority;
+    this.project = project;
+    this.completed = completed;
+    this.id = Date.now().toString();
+  }
+
+  _getDateObject() {
+    if (!this.dueDate) return null;
+    
+    if (this.dueDate instanceof Date) {
+      return isNaN(this.dueDate.getTime()) ? null : this.dueDate;
+    }
+    
+    if (typeof this.dueDate === 'string') {
+      const dateObj = new Date(this.dueDate);
+      return isNaN(dateObj.getTime()) ? null : dateObj;
+    }
+    
+    return null;
+  }
+
+  getFormattedDate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return 'No due date';
+
+    if (isToday(dateObj)) {
+      return 'Today';
+    } else if (isTomorrow(dateObj)) {
+      return 'Tomorrow';
+    } else if (isYesterday(dateObj)) {
+      return 'Yesterday';
+    } else if (isPast(dateObj)) {
+      const daysAgo = differenceInDays(new Date(), dateObj);
+      return `${daysAgo} days ago`;
+    } else {
+      const daysUntil = differenceInDays(dateObj, new Date());
+      return `In ${daysUntil} days`;
+    }
+  }
+
+  getShortDate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return '';
+    
+    if (isThisYear(dateObj)) {
+      return format(dateObj, 'MMM d');
+    } else {
+      return format(dateObj, 'MMM d, yyyy');
+    }
+  }
+
+  getFullDate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return '';
+    
+    return format(dateObj, 'EEEE, MMMM d, yyyy');
+  }
+
+  getISODate() {
+    const dateObj = this._getDateObject();
+    if (!dateObj) return '';
+    
+    return dateObj.toISOString().split('T')[0];
+  }
+
+  toggleCompletion() {
+    this.completed = !this.completed;
+  }
+
+  update({ title, description, dueDate, priority, project }) {
+    this.title = title;
+    this.description = description;
+    this.dueDate = dueDate ? new Date(dueDate) : null;
+    this.priority = priority;
+    this.project = project;
+  }
+}
