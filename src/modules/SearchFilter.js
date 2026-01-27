@@ -8,12 +8,15 @@ export class SearchFilter {
         this.searchInput = null;
         this.filterButtons = null;
         this.resultsCountElement = null;
+        this.eventListenersAdded = false;
+        this.lastRenderedFilter = null;
     }
 
     init() {
         this.createSearchUI();
         this.setupEventListeners();
         this.updateResultsCount();
+        this.setFilter('all'); // Ensure "All" is active on init
     }
 
     createSearchUI() {
@@ -46,7 +49,7 @@ export class SearchFilter {
                 </div>
                 
                 <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="all">All</button>
                     <button class="filter-btn" data-filter="active">Active</button>
                     <button class="filter-btn" data-filter="completed">Completed</button>
                 </div>
@@ -70,14 +73,16 @@ export class SearchFilter {
     }
 
     setupEventListeners() {
-        if (!this.searchInput) return;
-
+        if (!this.searchInput || this.eventListenersAdded) return;
+        
         // Search input events
-        this.searchInput.addEventListener('input', (e) => {
+        const handleSearchInput = (e) => {
             this.searchTerm = e.target.value.trim().toLowerCase();
             this.clearSearchBtn.style.display = this.searchTerm ? 'block' : 'none';
             this.applyFilters();
-        });
+        };
+        
+        this.searchInput.addEventListener('input', handleSearchInput);
 
         // Clear search button
         this.clearSearchBtn.addEventListener('click', () => {
@@ -95,26 +100,38 @@ export class SearchFilter {
                 this.setFilter(filter);
             });
         });
+        
+        this.eventListenersAdded = true;
     }
 
     setFilter(filter) {
+        console.log('🎯 setFilter called:', filter, 'current:', this.currentFilter);
+        
         if (this.currentFilter === filter) return;
         
         this.currentFilter = filter;
         
-        // Update active state of buttons
-        this.filterButtons.forEach(btn => {
-            if (btn.dataset.filter === filter) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+        // CRITICAL FIX: Update active state of buttons
+        if (this.filterButtons && this.filterButtons.length > 0) {
+            this.filterButtons.forEach(btn => {
+                if (btn.dataset.filter === filter) {
+                    console.log('  Adding active to:', btn.dataset.filter);
+                    btn.classList.add('active');
+                } else {
+                    console.log('  Removing active from:', btn.dataset.filter);
+                    btn.classList.remove('active');
+                }
+            });
+        } else {
+            console.warn('❌ filterButtons not found!');
+        }
         
         this.applyFilters();
     }
 
     applyFilters() {
+        console.log('🔍 applyFilters called - search:', this.searchTerm || '(empty)', 'filter:', this.currentFilter);
+        
         const currentProject = this.todoManager.getCurrentProject();
         let todos = currentProject ? currentProject.todos : [];
         
@@ -138,9 +155,14 @@ export class SearchFilter {
             // 'all' shows all todos
         }
         
-        // Update UI with filtered todos
+        console.log(`🔍 Filtered to ${todos.length} todos`);
+        
+        // ALWAYS update UI when filters change
+        console.log('🔍 Updating UI with', todos.length, 'todos');
         this.ui.renderTodos(todos);
+        
         this.updateResultsCount(todos.length);
+        this.lastRenderedFilter = this.currentFilter;
     }
 
     updateResultsCount(count) {
@@ -157,10 +179,16 @@ export class SearchFilter {
             this.resultsCountElement.textContent = 
                 `${totalTodos} todos`;
         }
+        
+        console.log(`🔍 Results: ${this.resultsCountElement.textContent}`);
     }
 
-    // Call this when todos are added/removed/completed
+    // Simple refresh
     refresh() {
-        this.applyFilters();
+        if (this.searchTerm || this.currentFilter !== 'all') {
+            this.applyFilters();
+        } else {
+            this.updateResultsCount();
+        }
     }
 }

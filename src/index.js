@@ -24,6 +24,7 @@ const searchFilter = new SearchFilter(todoManager, ui);
 // Wait a tiny bit for UI to render, then initialize search
 setTimeout(() => {
   searchFilter.init();
+  ui.searchFilter = searchFilter;
   window.searchFilter = searchFilter;
   console.log('✅ Search & Filter initialized');
 }, 100);

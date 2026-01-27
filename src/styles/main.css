@@ -1473,3 +1473,41 @@ footer {
     background-color: var(--primary-dark);
   }
 }
+
+/* ===== ULTRA-FORCE FILTER BUTTON ACTIVE STATE ===== */
+/* This will override ANYTHING including Dark Reader */
+button.filter-btn.active,
+button[data-filter].active,
+.filter-buttons button.active,
+.search-container button.filter-btn.active {
+  background-color: #2563eb !important; /* Bright blue */
+  color: white !important;
+  font-weight: 700 !important;
+  border: 2px solid #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+  transform: translateY(-2px) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Dark mode - even brighter */
+@media (prefers-color-scheme: dark) {
+  button.filter-btn.active,
+  button[data-filter].active,
+  .filter-buttons button.active,
+  .search-container button.filter-btn.active {
+    background-color: #3b82f6 !important; /* Even brighter blue for dark mode */
+    border-color: #3b82f6 !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5) !important;
+  }
+}
+
+/* Hover states */
+button.filter-btn:hover {
+  transform: translateY(-1px) !important;
+  transition: transform 0.2s !important;
+}
+
+button.filter-btn.active:hover {
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5) !important;
+}
