@@ -3,44 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo App - Simple & Powerful</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Todo SimpleApp</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
-    <div id="app">
+    <div class="app-container">
         <header>
             <h1><i class="fas fa-tasks"></i> Todo SimpleApp</h1>
-            <p>Your minimalist task manager</p>
+            <p class="subtitle">A clean, modern todo app with drag & drop</p>
         </header>
         
-        <main>
-            <div class="container">
-                <!-- Sidebar for projects -->
-                <aside id="sidebar" class="sidebar">
-                    <h3><i class="fas fa-folder"></i> Projects</h3>
-                    <ul id="projects-list"></ul>
-                    <button id="new-project-btn" class="btn">
-                        <i class="fas fa-plus"></i> New Project
+        <div class="app-content">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Projects</h3>
+                    <button id="new-project-btn" class="icon-btn" title="New Project">
+                        <i class="fas fa-plus"></i>
                     </button>
-                </aside>
-                
-                <!-- Main content area -->
+                </div>
+                <div id="projects-list"></div>
+            </aside>
+            
+            <main>
                 <section class="content">
-                    <div id="project-header">
-                        <div id="current-project">Inbox</div>
+                    <div id="current-project"></div>
+                    
+                    <div class="todos-header">
+                        <h3>Todos</h3>
                         <button id="new-todo-btn" class="btn primary">
-                            <i class="fas fa-plus"></i> Add Todo
+                            <i class="fas fa-plus"></i> New Todo
                         </button>
                     </div>
                     
-                    <div id="todos-container">
-                        <p>Your todos will appear here...</p>
-                    </div>
+                    <div id="todos-container"></div>
                 </section>
-            </div>
-        </main>
+            </main>
+        </div>
         
-        <!-- Todo Form Modal -->
+        <!-- Todo Modal -->
         <div id="todo-modal" class="modal" style="display: none;">
             <div class="modal-content">
                 <div class="modal-header">
@@ -75,9 +76,52 @@
                         </div>
                     </div>
                     
+                    <!-- RECURRENCE FIELDS -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="todo-recurrence">Repeat</label>
+                            <select id="todo-recurrence">
+                                <option value="none" selected>Does not repeat</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="todo-recurrence-end">End Date (optional)</label>
+                            <input type="date" id="todo-recurrence-end">
+                        </div>
+                    </div>
+                    
                     <div class="form-actions">
                         <button type="button" class="btn cancel-btn">Cancel</button>
                         <button type="submit" class="btn primary">Add Todo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Project Modal -->
+        <div id="project-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>New Project</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <form id="project-form">
+                    <div class="form-group">
+                        <label for="project-name">Project Name *</label>
+                        <input type="text" id="project-name" required placeholder="e.g., Work, Personal">
+                    </div>
+                    <div class="form-group">
+                        <label for="project-description">Description (optional)</label>
+                        <textarea id="project-description" rows="2" placeholder="What's this project about?"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn cancel-btn">Cancel</button>
+                        <button type="submit" class="btn primary">Create Project</button>
                     </div>
                 </form>
             </div>
@@ -87,7 +131,5 @@
             <p>Built with ❤️ using Webpack & localStorage</p>
         </footer>
     </div>
-    
-    <!-- Webpack will inject our JavaScript here -->
 </body>
 </html>

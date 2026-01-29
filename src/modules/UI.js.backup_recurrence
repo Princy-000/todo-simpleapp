@@ -32,9 +32,7 @@ export class UI {
       title: '',
       description: '',
       dueDate: new Date().toISOString().split('T')[0],
-      priority: 'medium',
-      recurrence: 'none',
-      recurrenceEndDate: ''
+      priority: 'medium'
     }, 'Add New Todo');
   }
   
@@ -44,9 +42,7 @@ export class UI {
       title: todo.title,
       description: todo.description || '',
       dueDate: todo.getISODate() || new Date().toISOString().split('T')[0],
-      priority: todo.priority,
-      recurrence: todo.recurrence || 'none',
-      recurrenceEndDate: todo.recurrenceEndDate ? todo.recurrenceEndDate.toISOString().split('T')[0] : ''
+      priority: todo.priority
     }, 'Edit Todo');
   }
   
@@ -62,9 +58,6 @@ export class UI {
     document.getElementById('todo-due-date').value = data.dueDate;
     document.getElementById('todo-priority').value = data.priority;
     
-        if (document.getElementById('todo-recurrence')) document.getElementById('todo-recurrence').value = data.recurrence || 'none';
-    if (document.getElementById('todo-recurrence-end')) document.getElementById('todo-recurrence-end').value = data.recurrenceEndDate || '';
-
     modal.style.display = 'flex';
     this.setupModalListeners();
     document.getElementById('todo-title').focus();
@@ -130,8 +123,6 @@ export class UI {
     const descriptionInput = document.getElementById('todo-description');
     const dueDateInput = document.getElementById('todo-due-date');
     const prioritySelect = document.getElementById('todo-priority');
-    const recurrenceSelect = document.getElementById('todo-recurrence');
-    const recurrenceEndInput = document.getElementById('todo-recurrence-end');
     
     if (!titleInput || !titleInput.value.trim()) {
       alert('Please enter a title for the todo');
@@ -143,9 +134,7 @@ export class UI {
       title: titleInput.value.trim(),
       description: descriptionInput.value.trim(),
       dueDate: dueDateInput.value || null,
-      priority: prioritySelect.value,
-      recurrence: recurrenceSelect ? recurrenceSelect.value : 'none',
-      recurrenceEndDate: recurrenceEndInput ? recurrenceEndInput.value || null : null
+      priority: prioritySelect.value
     };
   }
   
