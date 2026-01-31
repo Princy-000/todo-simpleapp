@@ -190,7 +190,7 @@ export class UI {
   
   renderProjects() {
     const projects = this.todoManager.projects;
-    const sidebar = document.getElementById('sidebar');
+    const sidebar = document.getElementById('projects-sidebar');
     if (!sidebar) return;
     const projectsList = document.getElementById('projects-list');
     if (projectsList) {
